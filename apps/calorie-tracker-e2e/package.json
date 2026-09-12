@@ -1,0 +1,26 @@
+{
+  "name": "@calorie-tracker/calorie-tracker-e2e",
+  "version": "0.0.1",
+  "private": true,
+  "nx": {
+    "implicitDependencies": [
+      "@calorie-tracker/calorie-tracker"
+    ],
+    "targets": {
+      "e2e": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{projectRoot}/test-output/jest/coverage"
+        ],
+        "dependsOn": [
+          "@calorie-tracker/calorie-tracker:build",
+          "@calorie-tracker/calorie-tracker:serve"
+        ],
+        "options": {
+          "jestConfig": "apps/calorie-tracker-e2e/jest.config.cts",
+          "passWithNoTests": true
+        }
+      }
+    }
+  }
+}
