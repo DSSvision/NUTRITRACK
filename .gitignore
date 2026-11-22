@@ -8,6 +8,11 @@ out-tsc
 # dependencies
 node_modules
 
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
 # IDEs and editors
 /.idea
 .project
@@ -45,3 +50,24 @@ Thumbs.db
 .claude/settings.local.json
 
 vitest.config.*.timestamp*
+
+# Next.js
+.next
+out
+
+# Expo
+node_modules/
+.expo/
+.yarn/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+cache/
+test-output
+/generated/prisma

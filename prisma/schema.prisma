@@ -1,0 +1,224 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+
+model User {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  email     String   @unique
+  name      String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  passwordHash String?
+  authProvider String @default("email")
+
+  profile UserProfile?
+  meals   Meal[]
+  refreshTokens RefreshToken[]
+  exercises     Exercise[]
+  weightEntries WeightEntry[]
+  foods Food[]
+}
+
+model UserProfile {
+  id     String @id @default(auto()) @map("_id") @db.ObjectId
+  userId String @unique @db.ObjectId
+
+  age Int
+
+  gender String
+
+  heightValue Float
+  heightUnit  String
+
+  currentWeightValue Float
+  currentWeightUnit  String
+
+  activityLevel String
+
+  goal String
+
+  targetWeightValue Float
+  targetWeightUnit  String
+
+  dailyCalorieTarget Int
+
+  calorieTargetOverridden Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Food {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String?  @db.ObjectId
+  name            String
+  normalizedName  String?
+  aliases         String[] @default([])
+
+  caloriesPer100g Float
+  proteinPer100g  Float
+  carbsPer100g    Float
+  fatPer100g      Float
+  fiberPer100g    Float?
+
+  source          String   @default("manual")
+  externalId      String?
+  dataType        String?
+
+  // AI/database nutrition provenance
+  estimationMethod String?
+  confidence       Float?
+  typicalServingGrams Float?
+  isVerified       Boolean @default(false)
+
+  user            User?    @relation(fields: [userId], references: [id])
+  mealItems       MealItem[]
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([name])
+  @@index([normalizedName])
+  @@index([source, externalId])
+  @@index([userId])
+}
+
+model Meal {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @db.ObjectId
+
+  mealType      String
+
+  eatenAt  DateTime
+  notes String?
+  createdAt DateTime   @default(now())
+
+  user      User       @relation(fields: [userId], references: [id])
+  items     MealItem[]
+  @@index([userId])
+  @@index([eatenAt])
+}
+
+
+model MealItem {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+
+  mealId    String   @db.ObjectId
+  foodId    String?  @db.ObjectId
+
+  // Food snapshot: preserves nutrition even without a Food record
+  foodName          String
+  caloriesPer100g   Float
+  proteinPer100g    Float
+  carbsPer100g      Float
+  fatPer100g        Float
+  fiberPer100g      Float?
+
+  quantity    Float
+  unit        String
+  weightGrams Float
+
+  calories  Float
+  protein   Float
+  carbs     Float
+  fat       Float
+  fiber     Float?
+
+  // Nutrition provenance
+  estimationMethod String?
+  confidence       Float?
+  isEstimated      Boolean @default(false)
+  assumptions      String?
+  nutritionSource  String?
+
+  // Original AI estimate, retained when the user edits nutrition
+  originalAiConfidence   Float?
+  originalAiAssumptions  String?
+  originalAiNutrition   Json?
+
+  meal      Meal     @relation(fields: [mealId], references: [id])
+  food      Food?    @relation(fields: [foodId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([mealId])
+  @@index([foodId])
+}
+
+
+model RefreshToken {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId String @db.ObjectId
+
+  tokenHash String @unique
+
+  expiresAt DateTime
+  revokedAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+}
+
+model Exercise {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId String @db.ObjectId
+
+  name String
+  durationMinutes Int
+  caloriesBurned Float
+
+  performedAt DateTime
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([performedAt])
+}
+
+model WeightEntry {
+  id String @id @default(auto()) @map("_id") @db.ObjectId
+
+  userId String @db.ObjectId
+
+  value Float
+  unit String
+
+  weightKg Float
+
+  recordedAt DateTime
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([recordedAt])
+}
